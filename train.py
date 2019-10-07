@@ -189,18 +189,17 @@ def train_iters(*,  # data: Data,
             sys.stdout.flush()
 
 
-def run_training():
+def run_training(*,
+                 training_filename: str,
+                 test_filename: str,
+                 encoder_savefilename: str,
+                 decoder_savefilename: str) -> None:
+
     max_length = 10
 
     teacher_forcing_ratio = 0.5
 
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    #    training_filename = "data/shakespeare50k.txt" if torch.cuda.is_available() else "data/shakespeare.tiny"
-    training_filename = "../pytorch_examples/data/shakespeare.tiny"
-    test_filename = "../pytorch_examples/data/shakespeare.test"
-    #    training_filename="data/a.train"
-    #    test_filename="data/a.train"
-    #training_filename = "/usr/share/dict/words"
 
     training_corpus = Corpus(name="training", filename=training_filename, max_length=max_length, device=device)
     test_corpus = Corpus(name="test", filename=test_filename, vocab=training_corpus.characters,
@@ -223,11 +222,6 @@ def run_training():
                                    dropout_p=0.1,
                                    max_src_length=training_corpus.word_tensor_length).to(device=device)
 
-    #    for i in range(len(training_corpus)):
-    #        print(str(training_corpus.words[i]) + "\t" + ''.join([training_corpus.characters.int2string[i] for i in training_corpus[i]["data"].tolist()]) + "\t" + ''.join([training_corpus.characters.int2string[i] for i in training_corpus[i]["labels"].tolist()]))
-    #    print()
-    #    print()
-
     train_iters(corpus=training_corpus,
                 encoder=encoder1,
                 decoder=attn_decoder1,
@@ -238,10 +232,20 @@ def run_training():
                 learning_rate=0.01,
                 teacher_forcing_ratio=teacher_forcing_ratio)
 
+    print(f"Saving encoder to {encoder_savefilename}...")
+    torch.save(encoder1, encoder_savefilename)
+
+    print(f"Saving decoder to {decoder_savefilename}...")
+    torch.save(attn_decoder1, decoder_savefilename)
+
     evaluate(corpus=test_corpus,
-             encoder=encoder1,
-             decoder=attn_decoder1)
+                 encoder=encoder1,
+                 decoder=attn_decoder1)
 
 
 if __name__ == "__main__":
-    run_training()
+
+    run_training(training_filename="../pytorch_examples/data/shakespeare.tiny",
+                 test_filename="../pytorch_examples/data/shakespeare.test",
+                 encoder_savefilename="shakespeare.tiny.encoder.pt",
+                 decoder_savefilename="shakespeare.tiny.decoder.pt")

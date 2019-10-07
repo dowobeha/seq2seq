@@ -6,14 +6,14 @@ class VocabularyEntry(NamedTuple):
     string: str
 
 
-class LimitedVocabulary(NamedTuple):
+class CoreVocabulary(NamedTuple):
     pad: VocabularyEntry
     oov: VocabularyEntry
     start_of_sequence: VocabularyEntry
     end_of_sequence: VocabularyEntry
 
 
-class Vocabulary(LimitedVocabulary):
+class Vocabulary(CoreVocabulary, Mapping[Union[int, str], VocabularyEntry]):
 
     def __new__(cls, *,
                 pad: VocabularyEntry,
@@ -91,13 +91,13 @@ class Vocabulary(LimitedVocabulary):
 
 if __name__ == '__main__':
 
-    v = Vocabulary.construct(pad='<pad>',
-                             oov='<oov>',
-                             start_of_sequence='<s>',
-                             end_of_sequence='</s>',
-                             strings=['a', 'b', 'oov', 'c'])
+    vocab = Vocabulary.construct(pad='<pad>',
+                                 oov='<oov>',
+                                 start_of_sequence='<s>',
+                                 end_of_sequence='</s>',
+                                 strings=['a', 'b', 'oov', 'c'])
 
-    print(v.oov in v)
-    print(None in v)
-    print(8 in v)
-    print(len(v))
+    print(vocab.oov in vocab)
+    print(None in vocab)
+    print(8 in vocab)
+    print(len(vocab))
