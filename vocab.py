@@ -70,13 +70,13 @@ class Vocabulary(CoreVocabulary, Mapping[Union[int, str], VocabularyEntry]):
 
         entry_list = [p, o, s, e]
 
-        for s in strings:
+        for string in strings:
 
-            if s == pad or s == oov or s == start_of_sequence or s == end_of_sequence:
+            if string == pad or string == oov or string == start_of_sequence or string == end_of_sequence:
                 raise ValueError(f"Strings must not contain reserved string:\t{s}")
 
-            if s not in entry_map:
-                v = VocabularyEntry(integer=len(entry_list), string=s)
+            if string not in entry_map:
+                v = VocabularyEntry(integer=len(entry_list), string=string)
                 entry_map[v.integer] = v
                 entry_map[v.string] = v
                 entry_list.append(v)
