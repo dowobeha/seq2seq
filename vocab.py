@@ -1,4 +1,4 @@
-from typing import Iterable, List, Mapping, NamedTuple, Union
+from typing import Iterable, List, Mapping, MutableMapping, NamedTuple, Union
 
 
 class VocabularyEntry(NamedTuple):
@@ -13,7 +13,7 @@ class CoreVocabulary(NamedTuple):
     end_of_sequence: VocabularyEntry
 
 
-class Vocabulary(CoreVocabulary, Mapping[Union[int, str], VocabularyEntry]):
+class Vocabulary(CoreVocabulary):
 
     def __new__(cls, *,
                 pad: VocabularyEntry,
@@ -63,7 +63,7 @@ class Vocabulary(CoreVocabulary, Mapping[Union[int, str], VocabularyEntry]):
         s = VocabularyEntry(integer=2, string=start_of_sequence)
         e = VocabularyEntry(integer=3, string=end_of_sequence)
 
-        entry_map = {0: p, pad: p,
+        entry_map: MutableMapping[Union[int, str], VocabularyEntry] = {0: p, pad: p,
                      1: o, oov: o,
                      2: s, start_of_sequence: s,
                      3: e, end_of_sequence: e}

@@ -29,7 +29,7 @@ class Word:
         return len(characters)
 
     @staticmethod
-    def generate_label(characters: List[str]) -> str:
+    def generate_label(characters: List[str]) -> List[str]:
         if Word.is_completely_alphabetic(characters):
             first_vowel = Word.position_of_first_vowel(characters)
             prefix = characters[0:first_vowel]
@@ -68,7 +68,7 @@ class Corpus(Dataset):
     def __len__(self) -> int:
         return len(self.words)
 
-    def __getitem__(self, index: int) -> Mapping[str, torch.Tensor]:
+    def __getitem__(self, index: int) -> Mapping[str, torch.LongTensor]:
 
         return {"data": self.create_tensor(sequence=self.words[index].characters,
                                            pad_to_length=self._max_word_length,
@@ -80,22 +80,21 @@ class Corpus(Dataset):
 
                 "start-of-sequence": torch.tensor(data=[self.characters.start_of_sequence.integer],
                                                   dtype=torch.long,
-                                                  device=self.device),
-
-                "string": self.words[index].characters}
+                                                  device=self.device)}
 
     def create_tensor(self, *, sequence: List[str], pad_to_length: int,
-                      include_start_of_sequence: bool) -> torch.Tensor:
+                      include_start_of_sequence: bool) -> torch.LongTensor:
 
         start_of_sequence: List[int] = [self.characters.start_of_sequence.integer] if include_start_of_sequence else []
-        int_sequence: List[int] = [self.characters[s].integer for s in sequence]
+        int_sequence: List[int] = [self.characters[s].integer for s in sequence]  # type: ignore[index]
         pads: List[int] = [self.characters.pad.integer] * max(0, (pad_to_length - len(sequence)))
         end_of_sequence: List[int] = [self.characters.end_of_sequence.integer]
 
         result = torch.tensor(data=start_of_sequence + int_sequence + end_of_sequence + pads,
                               dtype=torch.long,
-                              device=self.device)
-        return result
+                              device=self.device) 
+        
+        return result  # type: ignore[return-value]
 
     @staticmethod
     def read_words(filename: str, max_length: int) -> List[Word]:
@@ -108,7 +107,7 @@ class Corpus(Dataset):
         return words
 
     @staticmethod
-    def calculate_longest(sequences: List[str]) -> int:
+    def calculate_longest(sequences: List[List[str]]) -> int:
         longest: int = 0
         for sequence in sequences:
             length = len(sequence)
