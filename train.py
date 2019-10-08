@@ -164,7 +164,7 @@ def run_training(*,
 
     vocab: Vocabulary = pickle.load(open(vocab_pickle_filename, "rb"))
 
-    max_length = 10
+    max_length = 20
 
     teacher_forcing_ratio = 0.5
 
@@ -204,10 +204,10 @@ def run_training(*,
                 teacher_forcing_ratio=teacher_forcing_ratio)
 
     print(f"Saving encoder to {encoder_savefilename}...")
-    torch.save(encoder1, encoder_savefilename)
+    torch.save(encoder1.to(device=torch.device("cpu")), encoder_savefilename)
 
     print(f"Saving decoder to {decoder_savefilename}...")
-    torch.save(attn_decoder1, decoder_savefilename)
+    torch.save(attn_decoder1.to(device=torch.device("cpu")), decoder_savefilename)
 
     
 if __name__ == "__main__":
