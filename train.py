@@ -11,7 +11,7 @@ from torch.optim.optimizer import Optimizer
 from pg import Corpus
 from seq2seq import EncoderRNN, AttnDecoderRNN
 from utils import time_since, verify_shape
-
+from vocab import Vocabulary, VocabularyEntry, ReservedSymbols
 
 def train(*,
           input_tensor: torch.Tensor,  # shape: [src_seq_len, batch_size]
@@ -155,10 +155,14 @@ def train_iters(*,  # data: Data,
 
 
 def run_training(*,
+                 vocab_pickle_filename: str,
                  training_filename: str,
-                 test_filename: str,
                  encoder_savefilename: str,
                  decoder_savefilename: str) -> None:
+
+    import pickle
+
+    vocab: Vocabulary = pickle.load(open(vocab_pickle_filename, "rb"))
 
     max_length = 10
 
@@ -166,9 +170,11 @@ def run_training(*,
 
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    training_corpus = Corpus(name="training", filename=training_filename, max_length=max_length, device=device)
-    test_corpus = Corpus(name="test", filename=test_filename, vocab=training_corpus.characters,
-                         max_length=training_corpus._max_word_length, device=device)
+    training_corpus = Corpus(name="training",
+                             vocab=vocab,
+                             filename=training_filename,
+                             max_length=max_length,
+                             device=device)
 
     # for word in test_corpus.words:
     #    print(f"{''.join(word.characters)}\t{''.join(word.label)}")
@@ -206,7 +212,7 @@ def run_training(*,
     
 if __name__ == "__main__":
 
-    run_training(training_filename="../pytorch_examples/data/shakespeare.tiny",
-                 test_filename="../pytorch_examples/data/shakespeare.test",
+    run_training(vocab_pickle_filename="shakespeare.symbols.pkl",
+                 training_filename="../pytorch_examples/data/shakespeare.tiny",
                  encoder_savefilename="shakespeare.tiny.encoder.pt",
                  decoder_savefilename="shakespeare.tiny.decoder.pt")

@@ -1,6 +1,6 @@
 import torch
 
-from vocab import Vocabulary
+from vocab import Vocabulary, VocabularyEntry, ReservedSymbols
 from pg import Corpus
 from seq2seq import EncoderRNN, AttnDecoderRNN
 
@@ -42,3 +42,13 @@ def evaluate(vocab: Vocabulary,
             predicted_string = "".join([corpus.characters[i].string for i in predictions])
 
             print(predicted_string)
+
+
+if __name__ == "__main__":
+
+    import pickle
+
+    evaluate(vocab=pickle.load(open("shakespeare.symbols.pkl", "rb")),
+             corpus_filename="../pytorch_examples/data/shakespeare.tiny",
+             encoder=torch.load("shakespeare.tiny.encoder.pt"),
+             decoder=torch.load("shakespeare.tiny.decoder.pt"))
