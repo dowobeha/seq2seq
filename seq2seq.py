@@ -299,7 +299,7 @@ class AttnDecoderRNN(nn.Module):
 
     def decode_sequence(self,
                         encoder_outputs: torch.Tensor,
-                        start_of_sequence_symbol: int,
+                        start_symbol: int,
                         max_length: int,
                         target_tensor: torch.Tensor = None):
 
@@ -308,7 +308,7 @@ class AttnDecoderRNN(nn.Module):
         encoder_hidden_size: int = encoder_outputs.shape[2]
         device = encoder_outputs.device
 
-        decoder_input = torch.tensor(data=[[start_of_sequence_symbol]*batch_size],
+        decoder_input = torch.tensor(data=[[start_symbol] * batch_size],
                                      dtype=torch.long,
                                      device=device)
 
