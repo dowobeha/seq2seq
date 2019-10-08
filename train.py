@@ -45,7 +45,7 @@ def train(*,
     # use_teacher_forcing = False
 
     decoder_output = decoder.decode_sequence(encoder_outputs=encoder_outputs,
-                                             start_of_sequence_symbol=start_of_sequence_symbol,
+                                             start_symbol=start_of_sequence_symbol,
                                              max_length=max_tgt_length,
                                              target_tensor=target_tensor if use_teacher_forcing else None)
     # print(f"input_tensor.shape={input_tensor.shape}\tdecoder_output.shape={decoder_output.shape}\ttarget_tensor.shape={target_tensor.shape}\tmax_tgt_length={max_tgt_length}")

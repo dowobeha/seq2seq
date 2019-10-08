@@ -4,6 +4,7 @@ from vocab import Vocabulary
 from pg import Corpus
 from seq2seq import EncoderRNN, AttnDecoderRNN
 
+
 def evaluate(vocab: Vocabulary,
              corpus_filename: str,
              encoder: EncoderRNN,
@@ -31,9 +32,9 @@ def evaluate(vocab: Vocabulary,
 
             encoder_outputs = encoder.encode_sequence(input_tensor)
 
-            decoder_output=decoder.decode_sequence(encoder_outputs=encoder_outputs,
-                                                   start_of_sequence_symbol=corpus.characters.start_of_sequence.integer,
-                                                   max_length=corpus.label_tensor_length)
+            decoder_output = decoder.decode_sequence(encoder_outputs=encoder_outputs,
+                                                     start_symbol=corpus.characters.start_of_sequence.integer,
+                                                     max_length=corpus.label_tensor_length)
             _, top_i = decoder_output.topk(k=1)
 
             predictions = top_i.squeeze(dim=2).squeeze(dim=1).tolist()
