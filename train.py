@@ -13,41 +13,6 @@ from seq2seq import EncoderRNN, AttnDecoderRNN
 from utils import time_since, verify_shape
 
 
-def evaluate(corpus: Corpus,
-             encoder: EncoderRNN,
-             decoder: AttnDecoderRNN):
-
-    encoder.eval()
-    decoder.eval()
-
-    with torch.no_grad():
-
-        for batch in torch.utils.data.DataLoader(dataset=corpus, batch_size=1):
-
-            input_tensor: torch.Tensor = batch["data"].permute(1, 0)
-            #start_of_sequence: torch.Tensor = batch["start-of-sequence"].permute(1, 0)
-
-            # actual_batch_size: int = min(batch_size, input_tensor.shape[1])
-
-            #print(f"input_tensor.shape={input_tensor.shape}")
-            #print(batch["string"])
-            encoder_outputs = encoder.encode_sequence(input_tensor)
-            #print(encoder_outputs.shape)
-            # sys.exit()
-            #print(f"encoder_outputs.shape={encoder_outputs.shape}\tmax_decoder_seq={corpus.max_label_length}")
-            decoder_output=decoder.decode_sequence(encoder_outputs=encoder_outputs,
-                                                   start_of_sequence_symbol=corpus.characters.start_of_sequence.integer,
-                                                   max_length=corpus.label_tensor_length)
-            _, top_i = decoder_output.topk(k=1)
-
-            predictions = top_i.squeeze(dim=2).squeeze(dim=1).tolist()
-            #print(f"top_i.shape={top_i.shape}\t{predictions}")
-            predicted_string = "".join([corpus.characters[i].string for i in predictions])
-
-            # print(f"decoder_output.shape={decoder_output.shape}\ttop_i.shape={top_i.shape}\tpredictions={predictions}\t{predicted_string}")
-            print(predicted_string)
-
-
 def train(*,
           input_tensor: torch.Tensor,  # shape: [src_seq_len, batch_size]
           target_tensor: torch.Tensor,  # shape: [tgt_seq_len, batch_size]
@@ -238,11 +203,7 @@ def run_training(*,
     print(f"Saving decoder to {decoder_savefilename}...")
     torch.save(attn_decoder1, decoder_savefilename)
 
-    evaluate(corpus=test_corpus,
-                 encoder=encoder1,
-                 decoder=attn_decoder1)
-
-
+    
 if __name__ == "__main__":
 
     run_training(training_filename="../pytorch_examples/data/shakespeare.tiny",
