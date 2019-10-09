@@ -1,3 +1,4 @@
+import argparse
 import random
 import sys
 import time
@@ -155,25 +156,17 @@ def train_iters(*,  # data: Data,
 
 
 def run_training(*,
-                 vocab_pickle_filename: str,
-                 training_filename: str,
-                 encoder_savefilename: str,
-                 decoder_savefilename: str) -> None:
+                 config: argparse.Namespace) -> None:
 
     import pickle
 
-    vocab: Vocabulary = pickle.load(open(vocab_pickle_filename, "rb"))
-
-    max_length = 20
-
-    teacher_forcing_ratio = 0.5
+    vocab: Vocabulary = pickle.load(open(config.vocab, "rb"))
 
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    training_corpus = Corpus(name="training",
-                             vocab=vocab,
-                             filename=training_filename,
-                             max_length=max_length,
+    training_corpus = Corpus(vocab=vocab,
+                             filename=config.corpus,
+                             max_src_length=config.max_src_length,
                              device=device)
 
     # for word in test_corpus.words:
@@ -181,38 +174,68 @@ def run_training(*,
     # sys.exit()
 
     encoder1: EncoderRNN = EncoderRNN(input_size=len(training_corpus.characters),
-                                      embedding_size=200,
-                                      hidden_size=256,
-                                      num_hidden_layers=1).to(device=device)
+                                      embedding_size=config.encoder_embedding_size,
+                                      hidden_size=config.encoder_hidden_size,
+                                      num_hidden_layers=config.encoder_hidden_layers).to(device=device)
 
-    attn_decoder1 = AttnDecoderRNN(embedding_size=190,
-                                   decoder_hidden_size=7,
-                                   encoder_hidden_size=encoder1.hidden_size,
-                                   num_hidden_layers=1,
+    attn_decoder1 = AttnDecoderRNN(embedding_size=config.decoder_embedding_size,
+                                   decoder_hidden_size=config.decoder_hidden_size,
+                                   encoder_hidden_size=config.encoder_hidden_size,
+                                   num_hidden_layers=config.decoder_hidden_layers,
                                    output_size=len(training_corpus.characters),
-                                   dropout_p=0.1,
+                                   dropout_p=config.decoder_dropout,
                                    max_src_length=training_corpus.word_tensor_length).to(device=device)
 
     train_iters(corpus=training_corpus,
                 encoder=encoder1,
                 decoder=attn_decoder1,
                 device=device,
-                n_iters=10,
-                batch_size=25000,
-                print_every=1,
-                learning_rate=0.01,
-                teacher_forcing_ratio=teacher_forcing_ratio)
+                n_iters=config.num_epochs,
+                batch_size=config.batch_size,
+                print_every=config.print_every,
+                learning_rate=config.learning_rate,
+                teacher_forcing_ratio=config.teacher_forcing_ratio)
 
-    print(f"Saving encoder to {encoder_savefilename}...")
-    torch.save(encoder1.to(device=torch.device("cpu")), encoder_savefilename)
+    print(f"Saving encoder to {config.encoder}...")
+    torch.save(encoder1.to(device=torch.device("cpu")), config.encoder)
 
-    print(f"Saving decoder to {decoder_savefilename}...")
-    torch.save(attn_decoder1.to(device=torch.device("cpu")), decoder_savefilename)
+    print(f"Saving decoder to {config.decoder}...")
+    torch.save(attn_decoder1.to(device=torch.device("cpu")), config.decoder)
 
-    
+
+def configure_train(args: List[str]) -> argparse.Namespace:
+
+    import configargparse
+
+    p = configargparse.get_argument_parser()
+    p.add('-c', '--config', required=True, is_config_file=True, help='configuration file')
+
+    p.add('--vocab', required=True, help='Pickle file containing a Vocabulary object')
+    p.add('--corpus', required=True, help='Filename of corpus to train')
+    p.add('--encoder', required=True, help='Path to save trained EncoderRNN object')
+    p.add('--decoder', required=True, help='Path to save trained AttnDecoderRNN object')
+
+    p.add('--print_every', required=True, type=int)
+    p.add('--batch_size', required=True, type=int)
+    p.add('--num_epochs', required=True, type=int)
+    p.add('--learning_rate', required=True, type=float)
+    p.add('--teacher_forcing_ratio', required=True, type=float)
+
+    p.add('--encoder_embedding_size', required=True, type=int)
+    p.add('--encoder_hidden_size', required=True, type=int)
+    p.add('--encoder_hidden_layers', required=True, type=int)
+
+    p.add('--decoder_embedding_size', required=True, type=int)
+    p.add('--decoder_hidden_size', required=True, type=int)
+    p.add('--decoder_hidden_layers', required=True, type=int)
+    p.add('--decoder_dropout', required=True, type=float)
+
+    p.add('--max_src_length', required=True, type=int)
+    p.add('--max_tgt_length', required=True, type=int)
+
+    return p.parse_args(args=args)
+
+
 if __name__ == "__main__":
 
-    run_training(vocab_pickle_filename="shakespeare.symbols.pkl",
-                 training_filename="../pytorch_examples/data/shakespeare.tiny",
-                 encoder_savefilename="shakespeare.tiny.encoder.pt",
-                 decoder_savefilename="shakespeare.tiny.decoder.pt")
+    run_training(config=configure_train(sys.argv[1:]))

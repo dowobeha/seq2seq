@@ -41,10 +41,15 @@ class Word:
 
 class Corpus(Dataset):
 
-    def __init__(self, *, name: str, filename: str, max_length: int, device: torch.device, vocab: Vocabulary = None):
+    def __init__(self, *,
+                 filename: str,
+                 max_src_length: int,
+                 device: torch.device,
+                 vocab: Vocabulary = None):
+
         self.device = device
 
-        self.words: List[Word] = Corpus.read_words(filename, max_length)
+        self.words: List[Word] = Corpus.read_words(filename, max_src_length)
 
         if vocab is None:
             strings = list()
@@ -59,8 +64,11 @@ class Corpus(Dataset):
         else:
             self.characters: Vocabulary = vocab
 
-        self._max_word_length = Corpus.calculate_longest([word.characters for word in self.words])
-        self._max_label_length = Corpus.calculate_longest([word.label for word in self.words])
+        # self._max_word_length = max_src_length
+        # self._max_label_length = max_tgt_length
+
+        self._max_word_length = Corpus.calculate_longest([word.characters for word in self.words]) # ; print(f"{self._max_word_length} {max_src_length}")
+        self._max_label_length = Corpus.calculate_longest([word.label for word in self.words]) # ;  print(f"{self._max_label_length} {max_tgt_length}")
 
         self.word_tensor_length = self._max_word_length + 2
         self.label_tensor_length = self._max_label_length + 1

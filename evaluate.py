@@ -1,3 +1,6 @@
+import argparse
+from typing import List
+
 import torch
 
 from vocab import Vocabulary, VocabularyEntry, ReservedSymbols
@@ -8,7 +11,8 @@ from seq2seq import EncoderRNN, AttnDecoderRNN
 def evaluate(vocab: Vocabulary,
              corpus_filename: str,
              encoder: EncoderRNN,
-             decoder: AttnDecoderRNN):
+             decoder: AttnDecoderRNN,
+             max_tgt_length: int):
 
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -20,9 +24,8 @@ def evaluate(vocab: Vocabulary,
 
     with torch.no_grad():
 
-        corpus = Corpus(name="eval",
-                        filename=corpus_filename,
-                        max_length=decoder.max_src_length,
+        corpus = Corpus(filename=corpus_filename,
+                        max_src_length=decoder.max_src_length,
                         vocab=vocab,
                         device=device)
         
@@ -34,7 +37,7 @@ def evaluate(vocab: Vocabulary,
 
             decoder_output = decoder.decode_sequence(encoder_outputs=encoder_outputs,
                                                      start_symbol=corpus.characters.start_of_sequence.integer,
-                                                     max_length=corpus.label_tensor_length)
+                                                     max_length=max_tgt_length)
             _, top_i = decoder_output.topk(k=1)
 
             predictions = top_i.squeeze(dim=2).squeeze(dim=1).tolist()
@@ -44,11 +47,30 @@ def evaluate(vocab: Vocabulary,
             print(predicted_string)
 
 
+def configure_evaluation(args: List[str]) -> argparse.Namespace:
+
+    import configargparse
+
+    p = configargparse.get_argument_parser()
+    p.add('-c', '--config', required=True, is_config_file=True, help='configuration file')
+    p.add('--vocab', required=True, help='Pickle file containing a Vocabulary object')
+    p.add('--corpus', required=True, help='Filename of corpus to evaluate')
+    p.add('--encoder', required=True, help='Pytorch save file containing a trained EncoderRNN object')
+    p.add('--decoder', required=True, help='Pytorch save file containing a trained AttnDecoderRNN object')
+    p.add('--max_decode_length', required=True, type=int, help='Maximum length string to generate during decoding')
+
+    return p.parse_args(args=args)
+
+
 if __name__ == "__main__":
 
     import pickle
+    import sys
 
-    evaluate(vocab=pickle.load(open("shakespeare.symbols.pkl", "rb")),
-             corpus_filename="../pytorch_examples/data/shakespeare.tiny",
-             encoder=torch.load("shakespeare.tiny.encoder.pt"),
-             decoder=torch.load("shakespeare.tiny.decoder.pt"))
+    options = configure_evaluation(sys.argv[1:])
+
+    evaluate(vocab=pickle.load(open(options.vocab, "rb")),
+             corpus_filename=options.corpus,
+             encoder=torch.load(options.encoder),
+             decoder=torch.load(options.decoder),
+             max_tgt_length=options.max_decode_length)
