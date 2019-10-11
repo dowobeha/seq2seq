@@ -173,18 +173,22 @@ def run_training(*,
     #    print(f"{''.join(word.characters)}\t{''.join(word.label)}")
     # sys.exit()
 
-    encoder1: EncoderRNN = EncoderRNN(input_size=len(training_corpus.characters),
-                                      embedding_size=config.encoder_embedding_size,
-                                      hidden_size=config.encoder_hidden_size,
-                                      num_hidden_layers=config.encoder_hidden_layers).to(device=device)
+    if config.continue_training:
+        encoder1 = torch.load(config.encoder, map_location=device)
+        attn_decoder1 = torch.load(config.decoder, map_location=device)
+    else:
+        encoder1: EncoderRNN = EncoderRNN(input_size=len(training_corpus.characters),
+                                          embedding_size=config.encoder_embedding_size,
+                                          hidden_size=config.encoder_hidden_size,
+                                          num_hidden_layers=config.encoder_hidden_layers).to(device=device)
 
-    attn_decoder1 = AttnDecoderRNN(embedding_size=config.decoder_embedding_size,
-                                   decoder_hidden_size=config.decoder_hidden_size,
-                                   encoder_hidden_size=config.encoder_hidden_size,
-                                   num_hidden_layers=config.decoder_hidden_layers,
-                                   output_size=len(training_corpus.characters),
-                                   dropout_p=config.decoder_dropout,
-                                   max_src_length=training_corpus.word_tensor_length).to(device=device)
+        attn_decoder1 = AttnDecoderRNN(embedding_size=config.decoder_embedding_size,
+                                       decoder_hidden_size=config.decoder_hidden_size,
+                                       encoder_hidden_size=config.encoder_hidden_size,
+                                       num_hidden_layers=config.decoder_hidden_layers,
+                                       output_size=len(training_corpus.characters),
+                                       dropout_p=config.decoder_dropout,
+                                       max_src_length=training_corpus.word_tensor_length).to(device=device)
 
     train_iters(corpus=training_corpus,
                 encoder=encoder1,
@@ -215,6 +219,8 @@ def configure_train(args: List[str]) -> argparse.Namespace:
     p.add('--encoder', required=True, help='Path to save trained EncoderRNN object')
     p.add('--decoder', required=True, help='Path to save trained AttnDecoderRNN object')
 
+    p.add('--continue_training', required=False, type=bool, help='Continue training')
+    
     p.add('--print_every', required=True, type=int)
     p.add('--batch_size', required=True, type=int)
     p.add('--num_epochs', required=True, type=int)
