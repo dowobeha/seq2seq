@@ -3,8 +3,8 @@ import argparse
 import torch
 
 from vocab import *
-from models.pg import Corpus
-from models.seq2seq import EncoderRNN, AttnDecoderRNN
+from pg import Corpus
+from seq2seq import EncoderRNN, AttnDecoderRNN
 
 
 def evaluate(vocab: Vocabulary,

@@ -9,8 +9,8 @@ import torch.nn as nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 
-from models.pg import Corpus
-from models.seq2seq import EncoderRNN, AttnDecoderRNN
+from pg import Corpus
+from seq2seq import EncoderRNN, AttnDecoderRNN
 from utils import time_since, verify_shape
 from vocab import *
 
