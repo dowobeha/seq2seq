@@ -1,11 +1,10 @@
 import argparse
-from typing import List
 
 import torch
 
-from vocab import Vocabulary, VocabularyEntry, ReservedSymbols
-from pg import Corpus
-from seq2seq import EncoderRNN, AttnDecoderRNN
+from vocab import *
+from models.pg import Corpus
+from models.seq2seq import EncoderRNN, AttnDecoderRNN
 
 
 def evaluate(vocab: Vocabulary,

@@ -9,10 +9,11 @@ import torch.nn as nn
 from torch.optim import SGD
 from torch.optim.optimizer import Optimizer
 
-from pg import Corpus
-from seq2seq import EncoderRNN, AttnDecoderRNN
+from models.pg import Corpus
+from models.seq2seq import EncoderRNN, AttnDecoderRNN
 from utils import time_since, verify_shape
-from vocab import Vocabulary, VocabularyEntry, ReservedSymbols
+from vocab import *
+
 
 def train(*,
           input_tensor: torch.Tensor,  # shape: [src_seq_len, batch_size]
