@@ -11,6 +11,7 @@ def evaluate(vocab: Vocabulary,
              corpus_filename: str,
              encoder: EncoderRNN,
              decoder: AttnDecoderRNN,
+             max_src_length: int,
              max_tgt_length: int):
 
     device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -24,7 +25,7 @@ def evaluate(vocab: Vocabulary,
     with torch.no_grad():
 
         corpus = Corpus(filename=corpus_filename,
-                        max_src_length=decoder.max_src_length,
+                        max_src_length=max_src_length,  # decoder.max_src_length,
                         vocab=vocab,
                         device=device)
         
@@ -56,7 +57,9 @@ def configure_evaluation(args: List[str]) -> argparse.Namespace:
     p.add('--corpus', required=True, help='Filename of corpus to evaluate')
     p.add('--encoder', required=True, help='Pytorch save file containing a trained EncoderRNN object')
     p.add('--decoder', required=True, help='Pytorch save file containing a trained AttnDecoderRNN object')
-    p.add('--max_decode_length', required=True, type=int, help='Maximum length string to generate during decoding')
+    # p.add('--max_decode_length', required=True, type=int, help='Maximum length string to generate during decoding')
+    p.add('--max_src_length', required=True, type=int)
+    p.add('--max_tgt_length', required=True, type=int)
 
     return p.parse_args(args=args)
 
@@ -72,4 +75,5 @@ if __name__ == "__main__":
              corpus_filename=options.corpus,
              encoder=torch.load(options.encoder),
              decoder=torch.load(options.decoder),
-             max_tgt_length=options.max_decode_length)
+             max_src_length=options.max_src_length,
+             max_tgt_length=options.max_tgt_length)
