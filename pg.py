@@ -10,7 +10,7 @@ from vocab import Vocabulary
 class Word:
     def __init__(self, characters: List[str]):
         self.characters: List[str] = characters
-        self.label: List[str] = Word.generate_label(characters)
+        self.label: List[str] = characters #Word.generate_label(characters)
 
     def __str__(self) -> str:
         return f"{''.join(self.characters)}\t{''.join(self.label)}"

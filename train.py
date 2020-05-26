@@ -14,6 +14,13 @@ from seq2seq import EncoderRNN, AttnDecoderRNN
 from utils import time_since, verify_shape
 from vocab import *
 
+import pdb
+
+def accuracy(trg, pred):
+    pred = torch.argmax(pred, dim=1)
+    assert pred.shape[0] == trg.shape[0]
+    num_examples = pred.shape[0]
+    return torch.sum(torch.eq(trg, pred)).item()/num_examples
 
 def train(*,
           input_tensor: torch.Tensor,  # shape: [src_seq_len, batch_size]
@@ -58,6 +65,8 @@ def train(*,
     labels = target_tensor.reshape(
         -1)  # Reshaping from [seq_len, batch_size]                      to [seq_len*batch_size]
     loss += criterion(predictions, labels)
+
+    acc = accuracy(labels, predictions)
     # print(f"\t{decoder_output.view(-1,decoder_output.shape[-1]).shape}")
     # print(target_tensor.reshape(-1))
     #    print(f"\t{target_tensor.view(-1)}")
@@ -77,7 +86,8 @@ def train(*,
     encoder_optimizer.step()
     decoder_optimizer.step()
 
-    return loss.item()
+
+    return loss.item(), acc
 
 
 def train_iters(*,  # data: Data,
@@ -131,7 +141,9 @@ def train_iters(*,  # data: Data,
             # print(f"input_tensor.shape={input_tensor.shape}\t\ttarget_tensor.shape={target_tensor.shape}")
             # sys.exit()
 
-            loss: float = train(input_tensor=input_tensor,
+            # TODO: get the type in the definition
+            # float, torch.Tensor
+            loss, acc = train(input_tensor=input_tensor,
                                 target_tensor=target_tensor,
                                 encoder=encoder,
                                 decoder=decoder,
@@ -151,8 +163,9 @@ def train_iters(*,  # data: Data,
         if iteration % print_every == 0:
             print_loss_avg: float = print_loss_total / print_every
             print_loss_total = 0
-            print('%s (%d %d%%) %.4f' % (time_since(since=start, percent=iteration / n_iters),
-                                         iteration, iteration / n_iters * 100, print_loss_avg))
+            print('%s (%d %d%%) %.4f, %f' % (time_since(since=start, percent=iteration / n_iters),
+                                         iteration, iteration / n_iters * 100, print_loss_avg,
+                                             acc))
             sys.stdout.flush()
 
 
